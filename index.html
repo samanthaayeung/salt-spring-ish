@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salt Spring Island — Trip Receipt</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Geist Mono', 'Courier New', monospace;
+    background: #dddcd8;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2.5rem 1rem;
+  }
+
+  .receipt-wrap {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Semicircle punch edge — top */
+  .edge-top {
+    height: 12px;
+    background-color: #dddcd8;
+    background-image: radial-gradient(circle at 50% 100%, white 7px, transparent 8px);
+    background-size: 18px 12px;
+    background-repeat: repeat-x;
+    background-position: 9px 0;
+  }
+
+  /* Semicircle punch edge — bottom */
+  .edge-bottom {
+    height: 12px;
+    background-color: #dddcd8;
+    background-image: radial-gradient(circle at 50% 0%, white 7px, transparent 8px);
+    background-size: 18px 12px;
+    background-repeat: repeat-x;
+    background-position: 9px 0;
+  }
+
+  .receipt {
+    background: white;
+    padding: 0 1.4rem;
+  }
+
+  /* ── Dashed rule ── */
+  .dash {
+    border: none;
+    border-top: 1px dashed #bbb;
+    margin: 1rem 0;
+  }
+
+  /* ── Header ── */
+  .r-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 0 0;
+  }
+  .r-header-label {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: #111;
+  }
+
+  /* ── Title ── */
+  .title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 0.5rem;
+  }
+  .title-left {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-transform: uppercase;
+    color: #000;
+  }
+  .title-right {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-align: right;
+    text-transform: uppercase;
+    color: #000;
+  }
+  .sub-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 3px;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Chart ── */
+  .legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 8px;
+    color: #777;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .legend-dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+  }
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 52px;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Stats grids ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+  .stat-label {
+    font-size: 8px;
+    color: #888;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #000;
+    letter-spacing: -0.02em;
+  }
+  .stat-value.xl {
+    font-size: 19px;
+  }
+
+  /* ── Line items ── */
+  .section-head {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: 500;
+    margin: 0.6rem 0 0.25rem;
+  }
+  .line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #333;
+    padding: 1.5px 0;
+    letter-spacing: 0.02em;
+  }
+  .line.indent { padding-left: 10px; }
+  .line.sub {
+    color: #999;
+    font-size: 9.5px;
+  }
+  .line.bold {
+    font-weight: 700;
+    color: #000;
+    font-size: 11px;
+  }
+
+  /* ── Totals ── */
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 0.02em;
+    padding: 2px 0;
+  }
+  .pp-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9.5px;
+    color: #666;
+    padding: 2px 0;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Footer ── */
+  .r-footer {
+    text-align: center;
+    padding: 0.5rem 0 1.2rem;
+  }
+  .footer-loc {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #000;
+  }
+  .footer-date {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .footer-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #000;
+    margin-bottom: 0.35rem;
+  }
+  .footer-credit {
+    font-size: 8px;
+    color: #bbb;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="receipt-wrap">
+
+  <div class="edge-top"></div>
+
+  <div class="receipt">
+
+    <!-- Header -->
+    <div class="r-header">
+      <!-- Ferry icon -->
+      <svg width="46" height="34" viewBox="0 0 46 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="5" y="15" width="36" height="9" rx="2" fill="#111"/>
+        <rect x="13" y="7" width="18" height="9" rx="1" fill="#111"/>
+        <rect x="20" y="3" width="5" height="6" rx="1" fill="#111"/>
+        <path d="M1 28 Q5 25 11.5 27.5 Q18 30 23 27.5 Q28 25 34.5 27.5 Q41 30 45 27" stroke="#111" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span class="r-header-label">Trip Receipt</span>
+    </div>
+
+    <hr class="dash">
+
+    <!-- Title -->
+    <div class="title-row">
+      <div class="title-left">Salt Spring<br>Island</div>
+      <div class="title-right">North<br>Saanich</div>
+    </div>
+    <div class="sub-row">
+      <span>Long Weekend Trip</span>
+      <span>Aug 21–23, 2026</span>
+    </div>
+
+    <!-- Chart -->
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#111;"></span>Accomm.</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#555;"></span>Tsawwassen Ferry</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#999;"></span>Salt Spring Ferry</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#ccc;"></span>Kayak Tour</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="tripChart"></canvas>
+    </div>
+
+    <!-- Stats row 1 -->
+    <div class="stats-grid">
+      <div>
+        <div class="stat-label">Total Cost</div>
+        <div class="stat-value xl">$2,481</div>
+      </div>
+      <div>
+        <div class="stat-label">Per Person</div>
+        <div class="stat-value xl">$354</div>
+      </div>
+      <div>
+        <div class="stat-label">Guests</div>
+        <div class="stat-value xl">7</div>
+      </div>
+    </div>
+
+    <!-- Stats row 2 -->
+    <div class="stats-grid">
+      <div>
+        <div class="stat-label">Accommodation</div>
+        <div class="stat-value">$944</div>
+      </div>
+      <div>
+        <div class="stat-label">All Ferries</div>
+        <div class="stat-value">$855</div>
+      </div>
+      <div>
+        <div class="stat-label">Kayak Tour</div>
+        <div class="stat-value">$682</div>
+      </div>
+    </div>
+
+    <hr class="dash">
+
+    <!-- Line items -->
+    <div class="section-head">Accommodation</div>
+    <div class="line indent">
+      <span>2 Nights — North Saanich</span>
+      <span>$944.00</span>
+    </div>
+
+    <div class="section-head">Tsawwassen ↔ Swartz Bay</div>
+    <div class="line indent">
+      <span>Car 1 — 4 pax × 2 trips</span>
+      <span>$363.30</span>
+    </div>
+    <div class="line indent">
+      <span>Car 2 — 3 pax × 2 trips</span>
+      <span>$319.20</span>
+    </div>
+    <div class="line indent sub bold">
+      <span>Subtotal</span>
+      <span>$682.50</span>
+    </div>
+
+    <div class="section-head">Swartz Bay ↔ Salt Spring Island</div>
+    <div class="line indent">
+      <span>Car 1 — 4 pax (return)</span>
+      <span>$92.95</span>
+    </div>
+    <div class="line indent">
+      <span>Car 2 — 3 pax (return)</span>
+      <span>$79.60</span>
+    </div>
+    <div class="line indent sub bold">
+      <span>Subtotal</span>
+      <span>$172.55</span>
+    </div>
+
+    <div class="section-head">Bioluminescence Kayak Tour</div>
+    <div class="line indent">
+      <span>7 × $97.44 pp</span>
+      <span>$682.08</span>
+    </div>
+
+    <hr class="dash">
+
+    <div class="total-line">
+      <span>Grand Total</span>
+      <span>$2,481.13</span>
+    </div>
+    <div class="pp-line">
+      <span>Per Person (7) — Ferries Split Evenly</span>
+      <span>$354.45</span>
+    </div>
+
+    <hr class="dash">
+
+    <!-- Footer -->
+    <div class="r-footer">
+      <div class="footer-loc">North Saanich, BC</div>
+      <div class="footer-date">Aug 21 — 23, 2026</div>
+      <div class="footer-tag">Big Plans, Good Squad.</div>
+      <div class="footer-credit">Generated by Claude</div>
+    </div>
+
+  </div><!-- /receipt -->
+
+  <div class="edge-bottom"></div>
+
+</div><!-- /receipt-wrap -->
+
+<script>
+  (function() {
+    const canvas = document.getElementById('tripChart');
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: [''],
+        datasets: [
+          { label: 'Accommodation',      data: [944],    backgroundColor: '#111111' },
+          { label: 'Tsawwassen Ferry',   data: [682.50], backgroundColor: '#555555' },
+          { label: 'Salt Spring Ferry',  data: [172.55], backgroundColor: '#999999' },
+          { label: 'Kayak Tour',         data: [682.08], backgroundColor: '#cccccc' }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ' ' + ctx.dataset.label + ': $' + ctx.parsed.x.toFixed(2)
+            }
+          }
+        },
+        scales: {
+          x: { stacked: true, display: false, min: 0, max: 2600 },
+          y: { stacked: true, display: false }
+        }
+      }
+    });
+  })();
+</script>
+</body>
+</html>
