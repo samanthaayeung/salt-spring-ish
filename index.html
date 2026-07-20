@@ -116,17 +116,17 @@
   /* ── Chart ── */
   .legend {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
     margin: 6px 0 1.5rem;
   }
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     font-size: 8px;
     color: #777;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
   }
   .legend-dot {
@@ -223,7 +223,7 @@
   .pp-line {
     display: flex;
     justify-content: space-between;
-    font-size: 9.5px;
+    font-size: 13px; /* same size as Grand Total, regular weight */
     color: #666;
     padding: 2px 0;
     letter-spacing: 0.03em;
@@ -280,10 +280,10 @@
       <canvas id="tripChart"></canvas>
     </div>
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:#111;"></span>Accomm.</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#111;"></span>Accommodation</span>
       <span class="legend-item"><span class="legend-dot" style="background:#555;"></span>Victoria Ferry</span>
       <span class="legend-item"><span class="legend-dot" style="background:#999;"></span>Salt Spring Ferry</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#ccc;"></span>Kayak Tour</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#ccc;"></span>Activities</span>
     </div>
 
     <!-- Stats row 1 -->
@@ -311,7 +311,7 @@
       <span>$944.00</span>
     </div>
 
-    <div class="section-head">Tsawwassen ↔ Swartz Bay</div>
+    <div class="section-head">Victoria Ferry</div>
     <div class="line indent">
       <span>Car 1 — 4 people, return</span>
       <span>$363.30</span>
@@ -325,7 +325,7 @@
       <span>$682.50</span>
     </div>
 
-    <div class="section-head">Swartz Bay ↔ Salt Spring Island</div>
+    <div class="section-head">Salt Spring Ferry</div>
     <div class="line indent">
       <span>Car 1 — 4 people, return</span>
       <span>$92.95</span>
@@ -339,9 +339,9 @@
       <span>$172.55</span>
     </div>
 
-    <div class="section-head">Bioluminescence Kayak Tour</div>
+    <div class="section-head">Activities</div>
     <div class="line indent">
-      <span>7 people</span>
+      <span>Kayak Tour — 7 people</span>
       <span>$682.08</span>
     </div>
 
@@ -384,7 +384,7 @@
           { label: 'Accommodation',      data: [944],    backgroundColor: '#111111' },
           { label: 'Victoria Ferry',     data: [682.50], backgroundColor: '#555555' },
           { label: 'Salt Spring Ferry',  data: [172.55], backgroundColor: '#999999' },
-          { label: 'Kayak Tour',         data: [682.08], backgroundColor: '#cccccc' }
+          { label: 'Activities',         data: [682.08], backgroundColor: '#cccccc' }
         ]
       },
       options: {
