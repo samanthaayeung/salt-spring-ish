@@ -19,15 +19,26 @@
     padding: 2.5rem 1rem;
   }
 
+  /* Photo background — a fixed layer behind everything (this approach also
+     behaves on phones, where fixed background images can glitch) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: url('background.jpg') center / cover no-repeat;
+  }
+
   .receipt-wrap {
     width: 100%;
     max-width: 400px;
+    /* drop-shadow (unlike box-shadow) traces the scalloped edges too */
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.28));
   }
 
-  /* Semicircle punch edge — top */
+  /* Semicircle punch edge — top (transparent between bumps so the photo shows) */
   .edge-top {
     height: 12px;
-    background-color: #dddcd8;
     background-image: radial-gradient(circle at 50% 100%, white 7px, transparent 8px);
     background-size: 18px 12px;
     background-repeat: repeat-x;
@@ -37,7 +48,6 @@
   /* Semicircle punch edge — bottom */
   .edge-bottom {
     height: 12px;
-    background-color: #dddcd8;
     background-image: radial-gradient(circle at 50% 0%, white 7px, transparent 8px);
     background-size: 18px 12px;
     background-repeat: repeat-x;
@@ -195,6 +205,14 @@
     letter-spacing: 0.03em;
   }
 
+  /* ── Bottom icon line ── */
+  .footer-icons {
+    text-align: center;
+    font-size: 11px;
+    word-spacing: 8px;
+    padding: 0.1rem 0 1.1rem;
+  }
+
 </style>
 </head>
 <body>
@@ -325,6 +343,8 @@
     </div>
 
     <hr class="dash">
+
+    <div class="footer-icons">🏔️ 🌲 🛶 🌊 ⛴️ 🐚 🏝️ ✨</div>
 
   </div><!-- /receipt -->
 

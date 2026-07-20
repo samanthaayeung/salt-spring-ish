@@ -9,7 +9,8 @@ Made to share with the 7 people on the trip.
 Samantha (owner, edits it herself) and her trip group (viewers).
 
 ## Tech
-- One file: `index.html` — all styles and code live inside it, no build step
+- One page: `index.html` — all styles and code live inside it, no build step
+- One asset: `background.jpg` — halftone photo used as the page background
 - Font: Geist Mono, loaded from Google Fonts
 - Chart: Chart.js (stacked bar), loaded from a CDN
 - Hosted on GitHub Pages from the `main` branch
