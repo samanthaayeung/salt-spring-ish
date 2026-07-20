@@ -465,10 +465,11 @@
     tip.className = 'chart-tip';
     wrap.appendChild(tip);
 
-    // Entrance: the bars grow in only after the receipt has slid into place
-    // (skipped for reduced-motion users — chart appears instantly, no delay)
+    // Entrance: the chart is built immediately (building it later, while the
+    // receipt is still off-screen, breaks its sizing) but its grow-in
+    // animation is delayed so the bars fill while the receipt slides up.
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const makeChart = () => new Chart(canvas, {
+    new Chart(canvas, {
       type: 'bar',
       data: {
         labels: [''],
@@ -483,7 +484,13 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        animation: reducedMotion ? false : { duration: 900, easing: 'easeOutQuart' },
+        animation: reducedMotion ? false : {
+          duration: 900,
+          easing: 'easeOutQuart',
+          // delay only the initial grow-in (so bars fill during the receipt's
+          // slide) — hover highlights must react instantly
+          delay: (c) => (c.type === 'data' && c.mode === 'default') ? 450 : 0
+        },
         // only the segment directly under the cursor triggers the tooltip
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
@@ -491,6 +498,9 @@
           tooltip: {
             enabled: false, // built-in tooltip off; we position our own above the bar
             external: (context) => {
+              // wait until the paper has settled flat — while it's still moving,
+              // segments drift under the cursor and the tooltip would flicker
+              if (window.paperState && !window.paperState.flat) { tip.style.opacity = 0; return; }
               const t = context.tooltip;
               if (!t || t.opacity === 0) { tip.style.opacity = 0; return; }
               const dp = t.dataPoints && t.dataPoints[0];
@@ -513,9 +523,6 @@
         }
       }
     });
-
-    if (reducedMotion) makeChart();
-    else setTimeout(makeChart, 450); // bars grow while the receipt slides in
   })();
 </script>
 
@@ -540,6 +547,7 @@
     const glyphs = ['≈', '✻︎', '☼︎', '❀︎', '☾︎', '✶︎', '❋︎'];
     let next = 0, lastTime = 0;
     window.addEventListener('mousemove', (e) => {
+      if (e.target && e.target.id === 'tripChart') return; // keep the chart area clear
       const now = performance.now();
       if (now - lastTime < 70) return; // one glyph every ~70ms, not every pixel
       lastTime = now;
@@ -557,6 +565,8 @@
   // gentle paper wobble, the sheet bends a beat behind the base in 3D, and
   // the shadow swings the opposite way as if the cursor were a light.
   (function() {
+    // shared with the chart tooltip: it only shows once the paper is flat & still
+    window.paperState = { flat: true };
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(pointer: fine)').matches) return; // no cursor on touch screens
     const wrap = document.querySelector('.receipt-wrap');
@@ -579,7 +589,10 @@
     chartWrap.addEventListener('mouseenter', () => { holdFlat = true; });
     chartWrap.addEventListener('mouseleave', () => { holdFlat = false; });
 
+    let lastMouseX = 0, lastMouseY = 0;
     window.addEventListener('mousemove', (e) => {
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
       const r = wrap.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
@@ -589,11 +602,24 @@
     });
 
     function tick() {
-      const tx = holdFlat ? 0 : targetX;
-      const ty = holdFlat ? 0 : targetY;
-      // soft spring, damped enough that the wobble is a murmur, not a bounce
-      velX += (tx - x) * 0.028; velX *= 0.85; x += velX;
-      velY += (ty - y) * 0.028; velY *= 0.85; y += velY;
+      if (holdFlat) {
+        // lay flat quickly and without wobble, so the chart is a stable target
+        x += (0 - x) * 0.3; velX = 0;
+        y += (0 - y) * 0.3; velY = 0;
+      } else {
+        // soft spring, damped enough that the wobble is a murmur, not a bounce
+        velX += (targetX - x) * 0.028; velX *= 0.85; x += velX;
+        velY += (targetY - y) * 0.028; velY *= 0.85; y += velY;
+      }
+      const wasFlat = window.paperState.flat;
+      window.paperState.flat = !holdFlat ||
+        (Math.abs(x) < 0.02 && Math.abs(y) < 0.02);
+      // the paper just settled flat under a still cursor — re-trigger the
+      // hover so the chart tooltip appears without needing another mouse move
+      if (holdFlat && window.paperState.flat && !wasFlat) {
+        document.getElementById('tripChart').dispatchEvent(
+          new MouseEvent('mousemove', {clientX: lastMouseX, clientY: lastMouseY, bubbles: true}));
+      }
       // the bend layer chases the base tilt; the gap between them is the flex
       lagX += (x - lagX) * 0.12;
       lagY += (y - lagY) * 0.12;
