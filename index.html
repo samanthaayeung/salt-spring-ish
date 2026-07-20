@@ -105,7 +105,7 @@
   .sub-row {
     display: flex;
     justify-content: space-between;
-    font-size: 9px;
+    font-size: 12px;
     color: #888;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -229,6 +229,22 @@
     letter-spacing: 0.03em;
   }
 
+  /* Cursor trail — the receipt's ornament glyphs follow the mouse.
+     mix-blend-mode: difference flips them dark on paper, light on the photo */
+  .trail-glyph {
+    position: fixed;
+    z-index: 50;
+    font-size: 14px;
+    color: #fff;
+    mix-blend-mode: difference;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: trail-fade 0.7s ease-out forwards;
+  }
+  @keyframes trail-fade {
+    to { opacity: 0; }
+  }
+
   /* Phones: slimmer receipt so more of the photo shows,
      and colour key in two tidy columns instead of leaving an orphan */
   @media (max-width: 480px) {
@@ -306,17 +322,17 @@
 
     <!-- Line items -->
     <div class="section-head">Accommodation</div>
-    <div class="line indent">
+    <div class="line">
       <span>North Saanich — 2 nights</span>
       <span>$944.00</span>
     </div>
 
     <div class="section-head">Victoria Ferry</div>
-    <div class="line indent">
+    <div class="line">
       <span>Car 1 — 4 people, return</span>
       <span>$363.30</span>
     </div>
-    <div class="line indent">
+    <div class="line">
       <span>Car 2 — 3 people, return</span>
       <span>$319.20</span>
     </div>
@@ -326,11 +342,11 @@
     </div>
 
     <div class="section-head">Salt Spring Ferry</div>
-    <div class="line indent">
+    <div class="line">
       <span>Car 1 — 4 people, return</span>
       <span>$92.95</span>
     </div>
-    <div class="line indent">
+    <div class="line">
       <span>Car 2 — 3 people, return</span>
       <span>$79.60</span>
     </div>
@@ -340,7 +356,7 @@
     </div>
 
     <div class="section-head">Activities</div>
-    <div class="line indent">
+    <div class="line">
       <span>Kayak Tour — 7 people</span>
       <span>$682.08</span>
     </div>
@@ -422,5 +438,27 @@
     });
   })();
 </script>
+
+<script>
+  // Cursor trail of the receipt's ornament glyphs (skipped for reduced-motion users)
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const glyphs = ['≈', '✻︎', '☼︎', '❀︎', '☾︎', '✶︎', '❋︎'];
+    let next = 0, lastTime = 0;
+    window.addEventListener('mousemove', (e) => {
+      const now = performance.now();
+      if (now - lastTime < 70) return; // one glyph every ~70ms, not every pixel
+      lastTime = now;
+      const g = document.createElement('span');
+      g.className = 'trail-glyph';
+      g.textContent = glyphs[next++ % glyphs.length];
+      g.style.left = e.clientX + 'px';
+      g.style.top = e.clientY + 'px';
+      document.body.appendChild(g);
+      setTimeout(() => g.remove(), 750);
+    });
+  })();
+</script>
+
 </body>
 </html>
