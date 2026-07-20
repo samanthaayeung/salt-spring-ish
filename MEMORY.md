@@ -25,7 +25,11 @@
 - Everything printed on the receipt fades to 82% opacity ("thermal ink") via
   one rule: `.receipt > *:not(.receipt-sheen)`.
 - Chart tooltip is custom (floats above the bar, receipt-styled); segments
-  lighten on hover so the black one reads.
+  lighten on hover so the black one reads. The paper eases flat while the
+  cursor is over the chart — a tilted surface throws off hover hit-testing.
+- Scroll is locked during the entrance slide and the page always starts at
+  scroll zero, so the receipt lands exactly at top-of-page and you can never
+  scroll past it into empty background.
 - Entrance sequence: photo fades in (0.5s), receipt slides up from below and
   glides to a stop (1.7s, starts at 0.4s, long soft deceleration like light
   paper), chart bars grow in during the slide (start ~0.45s, 0.9s duration),
