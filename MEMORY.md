@@ -1,5 +1,10 @@
 # Memory
 
+## Links
+- Live site: https://samanthaayeung.github.io/salt-spring-trip/
+- Repo: https://github.com/samanthaayeung/salt-spring-trip (public)
+- Published 2026-07-20; Pages serves the `main` branch, root folder
+
 ## Key facts
 - `index.html` is the original receipt file from Downloads, unmodified.
 - Numbers: grand total $2,481.13, 7 guests, $354.45/person. Accommodation
