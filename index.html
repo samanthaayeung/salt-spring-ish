@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Salt Spring Island — Trip Receipt</title>
+<title>Salt Spring Ish</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -14,8 +14,6 @@
     background: #dddcd8;
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
     padding: 2.5rem 1rem;
   }
 
@@ -32,6 +30,8 @@
   .receipt-wrap {
     width: 100%;
     max-width: 400px;
+    /* margin auto = centered both ways, but still scrolls safely on small screens */
+    margin: auto;
     /* drop-shadow (unlike box-shadow) traces the scalloped edges too */
     filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.28));
   }
@@ -160,7 +160,7 @@
 
   /* ── Line items ── */
   .section-head {
-    font-size: 8px;
+    font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #888;
@@ -170,20 +170,20 @@
   .line {
     display: flex;
     justify-content: space-between;
-    font-size: 10.5px;
+    font-size: 12px;
     color: #333;
-    padding: 1.5px 0;
+    padding: 2px 0;
     letter-spacing: 0.02em;
   }
   .line.indent { padding-left: 10px; }
   .line.sub {
     color: #999;
-    font-size: 9.5px;
+    font-size: 11px;
   }
   .line.bold {
     font-weight: 700;
     color: #000;
-    font-size: 11px;
+    font-size: 12.5px;
   }
 
   /* ── Totals ── */
@@ -205,11 +205,12 @@
     letter-spacing: 0.03em;
   }
 
-  /* ── Bottom icon line ── */
+  /* ── Bottom ornament line ── */
   .footer-icons {
     text-align: center;
-    font-size: 11px;
-    word-spacing: 8px;
+    font-size: 13px;
+    color: #111;
+    word-spacing: 10px;
     padding: 0.1rem 0 1.1rem;
   }
 
@@ -241,7 +242,6 @@
       <div class="title-left">Salt Spring Ish</div>
     </div>
     <div class="sub-row">
-      <span>Long Weekend Trip</span>
       <span>Aug 21–23, 2026</span>
     </div>
 
@@ -272,22 +272,6 @@
       </div>
     </div>
 
-    <!-- Stats row 2 -->
-    <div class="stats-grid">
-      <div>
-        <div class="stat-label">Accommodation</div>
-        <div class="stat-value">$944</div>
-      </div>
-      <div>
-        <div class="stat-label">All Ferries</div>
-        <div class="stat-value">$855</div>
-      </div>
-      <div>
-        <div class="stat-label">Kayak Tour</div>
-        <div class="stat-value">$682</div>
-      </div>
-    </div>
-
     <hr class="dash">
 
     <!-- Line items -->
@@ -299,11 +283,11 @@
 
     <div class="section-head">Tsawwassen ↔ Swartz Bay</div>
     <div class="line indent">
-      <span>Car 1 — 4 pax, return</span>
+      <span>Car 1 — 4 people, return</span>
       <span>$363.30</span>
     </div>
     <div class="line indent">
-      <span>Car 2 — 3 pax, return</span>
+      <span>Car 2 — 3 people, return</span>
       <span>$319.20</span>
     </div>
     <div class="line indent sub bold">
@@ -313,11 +297,11 @@
 
     <div class="section-head">Swartz Bay ↔ Salt Spring Island</div>
     <div class="line indent">
-      <span>Car 1 — 4 pax, return</span>
+      <span>Car 1 — 4 people, return</span>
       <span>$92.95</span>
     </div>
     <div class="line indent">
-      <span>Car 2 — 3 pax, return</span>
+      <span>Car 2 — 3 people, return</span>
       <span>$79.60</span>
     </div>
     <div class="line indent sub bold">
@@ -327,7 +311,7 @@
 
     <div class="section-head">Bioluminescence Kayak Tour</div>
     <div class="line indent">
-      <span>7 pax × $97.44</span>
+      <span>7 people × $97.44</span>
       <span>$682.08</span>
     </div>
 
@@ -344,7 +328,7 @@
 
     <hr class="dash">
 
-    <div class="footer-icons">🏔️ 🌲 🛶 🌊 ⛴️ 🐚 🏝️ ✨</div>
+    <div class="footer-icons">&#x2248;&#xFE0E; &#x25B2;&#xFE0E; &#x273B;&#xFE0E; &#x263C;&#xFE0E; &#x2740;&#xFE0E; &#x263E;&#xFE0E; &#x2736;&#xFE0E; &#x2248;&#xFE0E;</div>
 
   </div><!-- /receipt -->
 
