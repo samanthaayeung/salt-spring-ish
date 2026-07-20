@@ -26,7 +26,12 @@
   one rule: `.receipt > *:not(.receipt-sheen)`.
 - Chart tooltip is custom (floats above the bar, receipt-styled); segments
   lighten on hover so the black one reads. The paper eases flat while the
-  cursor is over the chart — a tilted surface throws off hover hit-testing.
+  cursor is over the chart — a tilted surface throws off hover hit-testing —
+  and the tooltip only shows once the paper is flat and still (shared flag:
+  window.paperState.flat).
+- IMPORTANT: the chart must be built immediately at page load — building it
+  on a timer breaks its sizing. Its grow-in is synced to the entrance via a
+  scoped animation delay (initial reveal only, so hover stays instant).
 - Scroll is locked during the entrance slide and the page always starts at
   scroll zero, so the receipt lands exactly at top-of-page and you can never
   scroll past it into empty background.
