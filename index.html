@@ -55,6 +55,12 @@
   @media (prefers-reduced-motion: reduce) {
     body::before, .receipt-enter { animation: none; }
   }
+  /* While the receipt is sliding in, the page can't be scrolled — otherwise
+     the receipt hanging below the screen makes the page scrollable into
+     empty space, and you can end up stranded past the receipt when it lands */
+  html.entering, html.entering body {
+    overflow: hidden;
+  }
 
   .receipt-wrap {
     width: 100%;
@@ -514,6 +520,20 @@
 </script>
 
 <script>
+  // Entrance scroll handling: always start at the top (so the receipt lands
+  // exactly at scroll position zero) and lock scrolling until the slide ends.
+  (function() {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // no slide = no lock
+    const de = document.documentElement;
+    de.classList.add('entering');
+    const release = () => de.classList.remove('entering');
+    document.querySelector('.receipt-enter')
+      .addEventListener('animationend', release, { once: true });
+    setTimeout(release, 3200); // safety net in case the animation event never fires
+  })();
+
   // Cursor trail of the receipt's ornament glyphs (skipped for reduced-motion users)
   (function() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -551,6 +571,14 @@
     let x = 0, y = 0, velX = 0, velY = 0; // spring state (the wobble)
     let lagX = 0, lagY = 0;               // the paper's slower "bend" layer
 
+    // While hovering the bar chart the paper eases flat — a tilted surface
+    // throws off the chart's hover hit-testing, and flat paper reads better
+    // for pointing at segments anyway.
+    let holdFlat = false;
+    const chartWrap = document.querySelector('.chart-wrap');
+    chartWrap.addEventListener('mouseenter', () => { holdFlat = true; });
+    chartWrap.addEventListener('mouseleave', () => { holdFlat = false; });
+
     window.addEventListener('mousemove', (e) => {
       const r = wrap.getBoundingClientRect();
       const cx = r.left + r.width / 2;
@@ -561,9 +589,11 @@
     });
 
     function tick() {
+      const tx = holdFlat ? 0 : targetX;
+      const ty = holdFlat ? 0 : targetY;
       // soft spring, damped enough that the wobble is a murmur, not a bounce
-      velX += (targetX - x) * 0.028; velX *= 0.85; x += velX;
-      velY += (targetY - y) * 0.028; velY *= 0.85; y += velY;
+      velX += (tx - x) * 0.028; velX *= 0.85; x += velX;
+      velY += (ty - y) * 0.028; velY *= 0.85; y += velY;
       // the bend layer chases the base tilt; the gap between them is the flex
       lagX += (x - lagX) * 0.12;
       lagY += (y - lagY) * 0.12;
