@@ -1,8 +1,8 @@
 # Memory
 
 ## Links
-- Live site: https://samanthaayeung.github.io/salt-spring-trip/
-- Repo: https://github.com/samanthaayeung/salt-spring-trip (public)
+- Live site: https://samanthaayeung.github.io/salt-spring-ish/
+- Repo: https://github.com/samanthaayeung/salt-spring-ish (public)
 - Published 2026-07-20; Pages serves the `main` branch, root folder
 
 ## Key facts
