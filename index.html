@@ -23,7 +23,13 @@
   body::before {
     content: '';
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    /* lvh = full screen height even while the phone address bar is collapsing,
+       so the photo stays put during scroll (vh line is the older-browser fallback) */
+    height: 100vh;
+    height: 100lvh;
     z-index: -1;
     background: url('background.jpg') center / cover no-repeat;
   }
@@ -112,7 +118,7 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 6px;
+    margin: 6px 0 1rem;
   }
   .legend-item {
     display: flex;
@@ -132,7 +138,6 @@
     position: relative;
     width: 100%;
     height: 52px;
-    margin-bottom: 1rem;
   }
   /* Custom hover tooltip — floats above the bar, styled like the receipt */
   .chart-tip {
@@ -271,14 +276,14 @@
     </div>
 
     <!-- Chart -->
+    <div class="chart-wrap">
+      <canvas id="tripChart"></canvas>
+    </div>
     <div class="legend">
       <span class="legend-item"><span class="legend-dot" style="background:#111;"></span>Accomm.</span>
       <span class="legend-item"><span class="legend-dot" style="background:#555;"></span>Tsawwassen Ferry</span>
       <span class="legend-item"><span class="legend-dot" style="background:#999;"></span>Salt Spring Ferry</span>
       <span class="legend-item"><span class="legend-dot" style="background:#ccc;"></span>Kayak Tour</span>
-    </div>
-    <div class="chart-wrap">
-      <canvas id="tripChart"></canvas>
     </div>
 
     <!-- Stats row 1 -->
