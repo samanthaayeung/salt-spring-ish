@@ -39,14 +39,30 @@
     max-width: 400px;
     /* margin auto = centered both ways, but still scrolls safely on small screens */
     margin: auto;
-    /* drop-shadow (unlike box-shadow) traces the scalloped edges too */
-    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.28));
+    position: relative;
+    /* children keep their own 3D angles (needed for the paper-bend effect) */
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  /* Soft shadow cast around a transparent shape (box-shadow draws only
+     OUTSIDE the box), so nothing dark sits behind the see-through paper.
+     Being its own element, animating it never re-renders the text. */
+  .receipt-shadow {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+    transform: translate3d(0, 0, -40px); /* sits behind the paper in 3D */
+    will-change: transform;
+  }
+  .receipt-bend {
+    will-change: transform;
   }
 
   /* Semicircle punch edge — top (transparent between bumps so the photo shows) */
   .edge-top {
     height: 12px;
-    background-image: radial-gradient(circle at 50% 100%, white 7px, transparent 8px);
+    background-image: radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.88) 7px, transparent 8px);
     background-size: 18px 12px;
     background-repeat: repeat-x;
     background-position: 9px 0;
@@ -55,15 +71,37 @@
   /* Semicircle punch edge — bottom */
   .edge-bottom {
     height: 12px;
-    background-image: radial-gradient(circle at 50% 0%, white 7px, transparent 8px);
+    background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.88) 7px, transparent 8px);
     background-size: 18px 12px;
     background-repeat: repeat-x;
     background-position: 9px 0;
   }
 
   .receipt {
-    background: white;
+    /* slightly see-through like thin receipt paper; the backdrop blur
+       frosts the photo behind it so text stays fully legible */
+    background: rgba(255, 255, 255, 0.88);
+    -webkit-backdrop-filter: blur(7px);
+    backdrop-filter: blur(7px);
     padding: 0 1.4rem;
+    position: relative;
+    overflow: hidden; /* keeps the moving sheen inside the paper */
+  }
+  /* Sheen — a soft light spot on the paper surface that follows the cursor,
+     like light catching glossy thermal receipt paper */
+  .receipt-sheen {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    background: radial-gradient(circle closest-side,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.08) 45%,
+      transparent 70%);
+    pointer-events: none;
+    z-index: 5;
+    will-change: transform, opacity;
   }
 
   /* ── Dashed rule ── */
@@ -84,7 +122,7 @@
     font-size: 12px;
     font-weight: 400;
     letter-spacing: 0.08em;
-    color: #111;
+    color: #999;
   }
 
   /* ── Title ── */
@@ -271,9 +309,15 @@
 <body>
 <div class="receipt-wrap">
 
+  <div class="receipt-shadow" aria-hidden="true"></div>
+
+  <div class="receipt-bend">
+
   <div class="edge-top"></div>
 
   <div class="receipt">
+
+    <div class="receipt-sheen" aria-hidden="true"></div>
 
     <!-- Header -->
     <div class="r-header">
@@ -380,6 +424,8 @@
 
   <div class="edge-bottom"></div>
 
+  </div><!-- /receipt-bend -->
+
 </div><!-- /receipt-wrap -->
 
 <script>
@@ -397,10 +443,10 @@
       data: {
         labels: [''],
         datasets: [
-          { label: 'Accommodation',      data: [944],    backgroundColor: '#111111' },
-          { label: 'Victoria Ferry',     data: [682.50], backgroundColor: '#555555' },
-          { label: 'Salt Spring Ferry',  data: [172.55], backgroundColor: '#999999' },
-          { label: 'Activities',         data: [682.08], backgroundColor: '#cccccc' }
+          { label: 'Accommodation',      data: [944],    backgroundColor: '#111111', hoverBackgroundColor: '#454545' },
+          { label: 'Victoria Ferry',     data: [682.50], backgroundColor: '#555555', hoverBackgroundColor: '#7a7a7a' },
+          { label: 'Salt Spring Ferry',  data: [172.55], backgroundColor: '#999999', hoverBackgroundColor: '#b3b3b3' },
+          { label: 'Activities',         data: [682.08], backgroundColor: '#cccccc', hoverBackgroundColor: '#e0e0e0' }
         ]
       },
       options: {
@@ -457,6 +503,61 @@
       document.body.appendChild(g);
       setTimeout(() => g.remove(), 750);
     });
+  })();
+
+  // 3D tilt — the receipt leans to face the cursor. A soft spring gives it a
+  // gentle paper wobble, the sheet bends a beat behind the base in 3D, and
+  // the shadow swings the opposite way as if the cursor were a light.
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.matchMedia('(pointer: fine)').matches) return; // no cursor on touch screens
+    const wrap = document.querySelector('.receipt-wrap');
+    const bend = document.querySelector('.receipt-bend');
+    const shadow = document.querySelector('.receipt-shadow');
+    const sheen = document.querySelector('.receipt-sheen');
+    const MAX_TILT = 4;      // degrees at the screen edge (kept gentle so text stays crisp)
+    const SHADOW_SWING = 12; // px of shadow offset at the screen edge
+    const BEND = 1.2;        // how much the sheet flexes while moving
+
+    let targetX = 0, targetY = 0;
+    let x = 0, y = 0, velX = 0, velY = 0; // spring state (the wobble)
+    let lagX = 0, lagY = 0;               // the paper's slower "bend" layer
+
+    window.addEventListener('mousemove', (e) => {
+      const r = wrap.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // -1..1 = how far the cursor is from the receipt centre, relative to screen size
+      targetX = Math.max(-1, Math.min(1, (e.clientX - cx) / (window.innerWidth / 2)));
+      targetY = Math.max(-1, Math.min(1, (e.clientY - cy) / (window.innerHeight / 2)));
+    });
+
+    (function tick() {
+      // soft spring, damped enough that the wobble is a murmur, not a bounce
+      velX += (targetX - x) * 0.028; velX *= 0.85; x += velX;
+      velY += (targetY - y) * 0.028; velY *= 0.85; y += velY;
+      // the bend layer chases the base tilt; the gap between them is the flex
+      lagX += (x - lagX) * 0.12;
+      lagY += (y - lagY) * 0.12;
+
+      wrap.style.transform =
+        'perspective(900px)' +
+        ' rotateX(' + (-y * MAX_TILT).toFixed(2) + 'deg)' +
+        ' rotateY(' + (x * MAX_TILT).toFixed(2) + 'deg)';
+      bend.style.transform =
+        'rotateX(' + (-(y - lagY) * MAX_TILT * BEND).toFixed(2) + 'deg)' +
+        ' rotateY(' + ((x - lagX) * MAX_TILT * BEND).toFixed(2) + 'deg)';
+      shadow.style.transform =
+        'translate3d(' + (-x * SHADOW_SWING).toFixed(1) + 'px, ' +
+        (12 - y * SHADOW_SWING).toFixed(1) + 'px, -40px)';
+      // the light spot slides toward the cursor and brightens
+      // as the light gets more head-on
+      sheen.style.transform =
+        'translate3d(' + (x * wrap.clientWidth * 0.5).toFixed(1) + 'px, ' +
+        (y * wrap.clientHeight * 0.5).toFixed(1) + 'px, 0)';
+      sheen.style.opacity = (0.5 - 0.28 * Math.min(1, Math.hypot(x, y))).toFixed(2);
+      requestAnimationFrame(tick);
+    })();
   })();
 </script>
 
