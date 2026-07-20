@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Salt Spring Ish</title>
+<title>Salt Spring ish</title>
 <link rel="icon" type="image/png" href="island.png?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -32,13 +32,32 @@
     height: 100lvh;
     z-index: -1;
     background: url('background.jpg') center / cover no-repeat;
+    /* entrance: the photo fades in first */
+    animation: bg-fade 0.5s ease-out both;
+  }
+  @keyframes bg-fade {
+    from { opacity: 0; }
   }
 
-  .receipt-wrap {
+  /* Entrance: the receipt slides up from below the screen and glides to a
+     stop, decelerating like a receipt slid across a dinner table. Lives on
+     its own wrapper so it can't fight the cursor-tilt animation. */
+  .receipt-enter {
     width: 100%;
     max-width: 400px;
     /* margin auto = centered both ways, but still scrolls safely on small screens */
     margin: auto;
+    animation: receipt-slide 1.7s cubic-bezier(0.05, 0.7, 0.1, 1) 0.4s both;
+  }
+  @keyframes receipt-slide {
+    from { transform: translateY(105vh); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::before, .receipt-enter { animation: none; }
+  }
+
+  .receipt-wrap {
+    width: 100%;
     position: relative;
     /* children keep their own 3D angles (needed for the paper-bend effect) */
     transform-style: preserve-3d;
@@ -59,33 +78,37 @@
     will-change: transform;
   }
 
-  /* Semicircle punch edge — top (transparent between bumps so the photo shows) */
-  .edge-top {
-    height: 12px;
-    background-image: radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.88) 7px, transparent 8px);
-    background-size: 18px 12px;
-    background-repeat: repeat-x;
-    background-position: 9px 0;
-  }
-
-  /* Semicircle punch edge — bottom */
-  .edge-bottom {
-    height: 12px;
-    background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.88) 7px, transparent 8px);
-    background-size: 18px 12px;
-    background-repeat: repeat-x;
-    background-position: 9px 0;
-  }
-
   .receipt {
+    /* The scalloped torn ends are cut out of this one element with a mask
+       (top and bottom rows of semicircle bumps + the body in between), so
+       the translucent paper is a single seamless sheet. */
+    -webkit-mask-image:
+      linear-gradient(#000, #000),
+      radial-gradient(circle at 50% 100%, #000 7px, transparent 8px),
+      radial-gradient(circle at 50% 0%, #000 7px, transparent 8px);
+    -webkit-mask-size: 100% calc(100% - 24px), 18px 12px, 18px 12px;
+    -webkit-mask-position: 0 12px, 9px 0, 9px 100%;
+    -webkit-mask-repeat: no-repeat, repeat-x, repeat-x;
+    mask-image:
+      linear-gradient(#000, #000),
+      radial-gradient(circle at 50% 100%, #000 7px, transparent 8px),
+      radial-gradient(circle at 50% 0%, #000 7px, transparent 8px);
+    mask-size: 100% calc(100% - 24px), 18px 12px, 18px 12px;
+    mask-position: 0 12px, 9px 0, 9px 100%;
+    mask-repeat: no-repeat, repeat-x, repeat-x;
     /* slightly see-through like thin receipt paper; the backdrop blur
        frosts the photo behind it so text stays fully legible */
     background: rgba(255, 255, 255, 0.88);
     -webkit-backdrop-filter: blur(7px);
     backdrop-filter: blur(7px);
-    padding: 0 1.4rem;
+    padding: 12px 1.4rem; /* top/bottom 12px = the masked scallop zones */
     position: relative;
     overflow: hidden; /* keeps the moving sheen inside the paper */
+  }
+  /* Everything printed on the receipt is slightly faded, like thermal ink
+     (the sheen is excluded — it's light, not ink) */
+  .receipt > *:not(.receipt-sheen) {
+    opacity: 0.82;
   }
   /* Sheen — a soft light spot on the paper surface that follows the cursor,
      like light catching glossy thermal receipt paper */
@@ -307,13 +330,12 @@
 </style>
 </head>
 <body>
+<div class="receipt-enter">
 <div class="receipt-wrap">
 
   <div class="receipt-shadow" aria-hidden="true"></div>
 
   <div class="receipt-bend">
-
-  <div class="edge-top"></div>
 
   <div class="receipt">
 
@@ -329,7 +351,7 @@
 
     <!-- Title -->
     <div class="title-row">
-      <div class="title-left">Salt Spring Ish</div>
+      <div class="title-left">Salt Spring ish</div>
     </div>
     <div class="sub-row">
       <span>Aug 21–23, 2026</span>
@@ -422,11 +444,10 @@
 
   </div><!-- /receipt -->
 
-  <div class="edge-bottom"></div>
-
   </div><!-- /receipt-bend -->
 
 </div><!-- /receipt-wrap -->
+</div><!-- /receipt-enter -->
 
 <script>
   (function() {
@@ -438,7 +459,10 @@
     tip.className = 'chart-tip';
     wrap.appendChild(tip);
 
-    new Chart(canvas, {
+    // Entrance: the bars grow in only after the receipt has slid into place
+    // (skipped for reduced-motion users — chart appears instantly, no delay)
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const makeChart = () => new Chart(canvas, {
       type: 'bar',
       data: {
         labels: [''],
@@ -453,6 +477,7 @@
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        animation: reducedMotion ? false : { duration: 900, easing: 'easeOutQuart' },
         // only the segment directly under the cursor triggers the tooltip
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
@@ -482,6 +507,9 @@
         }
       }
     });
+
+    if (reducedMotion) makeChart();
+    else setTimeout(makeChart, 450); // bars grow while the receipt slides in
   })();
 </script>
 
@@ -532,7 +560,7 @@
       targetY = Math.max(-1, Math.min(1, (e.clientY - cy) / (window.innerHeight / 2)));
     });
 
-    (function tick() {
+    function tick() {
       // soft spring, damped enough that the wobble is a murmur, not a bounce
       velX += (targetX - x) * 0.028; velX *= 0.85; x += velX;
       velY += (targetY - y) * 0.028; velY *= 0.85; y += velY;
@@ -557,7 +585,14 @@
         (y * wrap.clientHeight * 0.5).toFixed(1) + 'px, 0)';
       sheen.style.opacity = (0.5 - 0.28 * Math.min(1, Math.hypot(x, y))).toFixed(2);
       requestAnimationFrame(tick);
-    })();
+    }
+
+    // hold the tilt until the receipt has finished sliding in
+    let tiltStarted = false;
+    const startTilt = () => { if (!tiltStarted) { tiltStarted = true; tick(); } };
+    document.querySelector('.receipt-enter')
+      .addEventListener('animationend', startTilt, { once: true });
+    setTimeout(startTilt, 3200); // safety net in case the animation event never fires
   })();
 </script>
 

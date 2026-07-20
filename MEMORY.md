@@ -20,8 +20,17 @@
   are named constants in the tilt script.
 - Paper is 88% opaque with a frosted backdrop blur; the shadow is cast around
   a transparent shape so nothing dark sits behind the see-through paper.
+- The scalloped ends are cut from the single .receipt element with a CSS mask
+  (no separate edge strips — they caused seams/overlap bands when tilting).
+- Everything printed on the receipt fades to 82% opacity ("thermal ink") via
+  one rule: `.receipt > *:not(.receipt-sheen)`.
 - Chart tooltip is custom (floats above the bar, receipt-styled); segments
   lighten on hover so the black one reads.
+- Entrance sequence: photo fades in (0.5s), receipt slides up from below and
+  glides to a stop (1.7s, starts at 0.4s, long soft deceleration like light
+  paper), chart bars grow in during the slide (start ~0.45s, 0.9s duration),
+  cursor tilt only wakes after the slide ends. All skipped for
+  reduced-motion users.
 
 ## Tried and abandoned
 - Claude Artifact hosting — replaced by GitHub Pages (see DECISIONS.md).
