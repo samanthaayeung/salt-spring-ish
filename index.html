@@ -224,9 +224,16 @@
     letter-spacing: 0.03em;
   }
 
-  /* Phones: slimmer receipt so more of the photo shows */
+  /* Phones: slimmer receipt so more of the photo shows,
+     and colour key in two tidy columns instead of leaving an orphan */
   @media (max-width: 480px) {
     body { padding: 2rem 2.2rem; }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      justify-content: start;
+      gap: 4px 12px;
+    }
   }
 
   /* ── Bottom ornament line ── */
@@ -250,7 +257,7 @@
     <!-- Header -->
     <div class="r-header">
       <img src="island.png?v=2" width="44" height="44" alt="" aria-hidden="true">
-      <span class="r-header-label">Trip Estimated Cost</span>
+      <span class="r-header-label">Cost So Far</span>
     </div>
 
     <hr class="dash">
@@ -295,7 +302,7 @@
     <!-- Line items -->
     <div class="section-head">Accommodation</div>
     <div class="line indent">
-      <span>2 nights — North Saanich</span>
+      <span>North Saanich — 2 nights</span>
       <span>$944.00</span>
     </div>
 
@@ -329,7 +336,7 @@
 
     <div class="section-head">Bioluminescence Kayak Tour</div>
     <div class="line indent">
-      <span>7 people × $97.44</span>
+      <span>7 people</span>
       <span>$682.08</span>
     </div>
 
@@ -389,16 +396,21 @@
               const t = context.tooltip;
               if (!t || t.opacity === 0) { tip.style.opacity = 0; return; }
               const dp = t.dataPoints && t.dataPoints[0];
-              if (dp) tip.textContent = dp.dataset.label + ': $' + dp.parsed.x.toFixed(2);
-              // keep the tooltip from poking past the receipt's sides
-              const x = Math.max(80, Math.min(wrap.clientWidth - 80, t.caretX));
-              tip.style.left = x + 'px';
+              if (dp) {
+                tip.textContent = dp.dataset.label + ': $' + dp.parsed.x.toFixed(2);
+                // centre over the hovered segment (base = segment start, x = segment end),
+                // then nudge inward if it would poke past the receipt's sides
+                const seg = dp.element;
+                const centre = (seg.base + seg.x) / 2;
+                const half = (tip.offsetWidth / 2) || 60;
+                tip.style.left = Math.max(half, Math.min(wrap.clientWidth - half, centre)) + 'px';
+              }
               tip.style.opacity = 1;
             }
           }
         },
         scales: {
-          x: { stacked: true, display: false, min: 0, max: 2600 },
+          x: { stacked: true, display: false, min: 0, max: 2481.13 }, // max = grand total so the bar spans the full width
           y: { stacked: true, display: false }
         }
       }
